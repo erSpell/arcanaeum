@@ -1,0 +1,407 @@
+/* Arcanaeum — frontend styling.
+   Civic Reading Room: a public library reading room in the evening, not a
+   private collector's study. Warm banker's-lamp light breaks the dimness at
+   intervals over clean oak shelving — an illustrated SVG scene (real DOM
+   markup, not an abstract gradient texture), so the background reads as an
+   actual room rather than a material sample. Every color that carries
+   "mood" is a custom property; picking a different theme swaps the
+   [data-theme] block below — the four themes are four lamp-glass registers
+   (department reading rooms), not four unrelated palettes.
+   Deliberately left theme-invariant: pure-black shadows, and the pdf/image/
+   text/dir/other file-tag colors (those are semantic, not decorative — like
+   syntax-highlighting). */
+
+:root{
+  /* ── Reading Room (default) — brass fittings, green banker's-lamp glass ── */
+  --wood:#1a1815; --wood-2:#0f0e0b; --wood-3:#231f1a;
+  --panel:#211e18; --panel-2:#191711; --panel-hi:#2b2720;
+  --rail:#3a3527; --rail-2:#4a4432;
+  --field-bg:#131110;
+  --brass:#7fa06c; --brass-dim:#5f7d50; --brass-deep:#3d523366; --accent-rgb:127,160,108;
+  --parchment:#ece6d4; --ink:#ddd7c2; --ink-dim:#a49c86; --ink-faint:#756e5a;
+  --shelf:#26221a; --shelf-lip:#332d21; --plate-bg:#100e0b;
+  --sheen-rgb:255,238,205; --glow-rgb:255,205,140;
+  --search-icon:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%235f7d50' stroke-width='1.5'><circle cx='7' cy='7' r='5'/><path d='M11 11l4 4'/></svg>");
+
+  --serif:"Cambria","Constantia","Georgia","Iowan Old Style","Palatino Linotype","Book Antiqua","Times New Roman",serif;
+  --sans:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono:"Cascadia Mono",Consolas,"SFMono-Regular",ui-monospace,"Liberation Mono",monospace;
+  --ease:cubic-bezier(.2,.7,.2,1); --dur:.18s;
+
+  /* Fine grain/roughness, shared by every theme — an inline SVG fractal-noise
+     tile (no image assets). Blended with `screen`: every theme's wood base
+     is very dark, and overlay/soft-light both scale their effect down toward
+     nothing on near-black — screen adds light regardless of how dark the
+     base is, so the grain actually shows up. */
+  --noise:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.07 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+}
+
+/* ── Periodicals — the newspaper room: cooler slate-blue lamp glass, a
+   quieter register than the main reading room ── */
+:root[data-theme="hollow"]{
+  --wood:#171a1c; --wood-2:#0d0f10; --wood-3:#1f2427;
+  --panel:#1c2023; --panel-2:#15181a; --panel-hi:#262b2f;
+  --rail:#333c40; --rail-2:#414c52;
+  --field-bg:#0f1213;
+  --brass:#5f86a3; --brass-dim:#456579; --brass-deep:#2c414f66; --accent-rgb:95,134,163;
+  --parchment:#dde6ea; --ink:#cdd8dc; --ink-dim:#93a2a8; --ink-faint:#647175;
+  --shelf:#1e2528; --shelf-lip:#2a3336; --plate-bg:#0c0e10;
+  --sheen-rgb:225,238,245; --glow-rgb:230,210,170;
+  --search-icon:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23456579' stroke-width='1.5'><circle cx='7' cy='7' r='5'/><path d='M11 11l4 4'/></svg>");
+}
+
+/* ── Reference Desk — the busiest room: warm amber-red lamp glass, closest
+   to a hearth's energy without leaving the civic register ── */
+:root[data-theme="hearth"]{
+  --wood:#1c1614; --wood-2:#100c0a; --wood-3:#261e19;
+  --panel:#241c17; --panel-2:#1a140f; --panel-hi:#302620;
+  --rail:#4a372a; --rail-2:#5c4635;
+  --field-bg:#150f0b;
+  --brass:#c96b3e; --brass-dim:#9c4f2a; --brass-deep:#65321866; --accent-rgb:201,107,62;
+  --parchment:#f0ddc8; --ink:#e0cab0; --ink-dim:#b08a68; --ink-faint:#7a5c44;
+  --shelf:#291f18; --shelf-lip:#382a20; --plate-bg:#120d0a;
+  --sheen-rgb:255,220,180; --glow-rgb:255,180,110;
+  --search-icon:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%239c4f2a' stroke-width='1.5'><circle cx='7' cy='7' r='5'/><path d='M11 11l4 4'/></svg>");
+}
+
+/* ── Rare Books — the special-collections room: the richest gold lamp
+   glass, the warmest and most formal of the four without turning ornate ── */
+:root[data-theme="harvest"]{
+  --wood:#1c1710; --wood-2:#100d09; --wood-3:#26200f;
+  --panel:#241d12; --panel-2:#1a150d; --panel-hi:#302818;
+  --rail:#5c4620; --rail-2:#705828;
+  --field-bg:#150f08;
+  --brass:#cf9f3f; --brass-dim:#a67b28; --brass-deep:#6b4f1666; --accent-rgb:207,159,63;
+  --parchment:#f5e8c8; --ink:#e9d6ab; --ink-dim:#b6976a; --ink-faint:#816a47;
+  --shelf:#2c2314; --shelf-lip:#3a2f1a; --plate-bg:#130f08;
+  --sheen-rgb:255,235,190; --glow-rgb:255,220,150;
+  --search-icon:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23a67b28' stroke-width='1.5'><circle cx='7' cy='7' r='5'/><path d='M11 11l4 4'/></svg>");
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--wood);color:var(--ink);font-family:var(--sans);font-size:14px;
+  -webkit-font-smoothing:antialiased;overflow:hidden;user-select:none;transition:background var(--dur) var(--ease)}
+button{font-family:inherit;color:inherit}
+::selection{background:rgba(var(--accent-rgb),.28);color:#fff}
+:focus-visible{outline:1px solid var(--brass);outline-offset:2px}
+#root{position:fixed;inset:0;display:flex;flex-direction:column}
+
+/* ── scrollbars ── */
+.stacks::-webkit-scrollbar,.ledger-body::-webkit-scrollbar{width:12px}
+.stacks::-webkit-scrollbar-track,.ledger-body::-webkit-scrollbar-track{background:var(--field-bg)}
+.stacks::-webkit-scrollbar-thumb,.ledger-body::-webkit-scrollbar-thumb{background:var(--rail);border:3px solid var(--field-bg);border-radius:0}
+.stacks::-webkit-scrollbar-thumb:hover,.ledger-body::-webkit-scrollbar-thumb:hover{background:var(--rail-2)}
+
+/* ══ TOP RAIL — reads as the circulation desk ══ */
+.rail{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:16px;min-height:60px;padding:10px 20px;position:relative;z-index:20;
+  background:linear-gradient(180deg,var(--panel) 0%,var(--panel-2) 100%);
+  border-bottom:1px solid #000;box-shadow:0 1px 0 var(--rail),0 10px 24px -8px #000;
+  transition:background var(--dur) var(--ease)}
+.brand{display:flex;flex-direction:column;line-height:1;margin-right:6px;padding-right:18px;border-right:1px solid var(--rail)}
+.brand b{font-family:var(--serif);font-size:22px;font-weight:600;letter-spacing:.04em;color:var(--parchment)}
+.brand small{font-family:var(--sans);font-size:9px;letter-spacing:.34em;text-transform:uppercase;color:var(--brass-dim);margin-top:5px;padding-left:2px}
+.search{flex:0 1 340px;min-width:150px;height:34px;padding:0 12px 0 34px;background:var(--field-bg);color:var(--ink);
+  border:1px solid var(--rail);border-radius:0;font-family:var(--serif);font-size:15px;font-style:italic;
+  background-image:var(--search-icon);
+  background-repeat:no-repeat;background-position:10px center;transition:border-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease)}
+.search::placeholder{color:var(--ink-faint);font-style:italic}
+.search:focus{outline:none;border-color:var(--brass-dim);box-shadow:0 0 0 1px var(--brass-deep) inset}
+.seg{display:flex;border:1px solid var(--rail);background:var(--field-bg)}
+.seg button{height:34px;padding:0 13px;background:transparent;border:0;border-left:1px solid var(--rail);
+  font-family:var(--sans);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim);
+  cursor:pointer;transition:color var(--dur) var(--ease),background var(--dur) var(--ease)}
+.seg button:first-child{border-left:0}
+.seg button:hover{color:var(--ink);background:rgba(var(--accent-rgb),.08)}
+.seg button.on{color:#140f0a;background:linear-gradient(180deg,var(--brass),var(--brass-dim));font-weight:600;text-shadow:0 1px 0 rgba(255,255,255,.25)}
+/* The sort order is a second, independent control next to the view scope —
+   an underline rather than the view segment's filled pill, so the two never
+   read as one continuous selection at a glance. */
+#sort button.on{color:var(--brass);background:transparent;box-shadow:inset 0 -2px 0 var(--brass);text-shadow:none}
+.rail-spacer{flex:1 1 auto}
+
+/* shelf-size slider */
+.sizectl{display:flex;align-items:center;gap:7px;padding:0 4px}
+.sizectl-ico{color:var(--ink-dim);line-height:1;user-select:none}
+.sizectl-ico.small{font-size:7px}
+.sizectl-ico.big{font-size:13px}
+.sizectl input[type="range"]{-webkit-appearance:none;appearance:none;width:88px;height:2px;
+  background:var(--rail);outline:none;cursor:pointer}
+.sizectl input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+  width:12px;height:12px;border-radius:50%;background:var(--brass);border:1px solid var(--brass-dim);
+  box-shadow:0 1px 3px rgba(0,0,0,.6);transition:background var(--dur) var(--ease)}
+.sizectl input[type="range"]::-webkit-slider-thumb:hover{background:var(--parchment)}
+.count{font-family:var(--mono);font-size:11px;font-variant-numeric:tabular-nums;color:var(--ink-dim);letter-spacing:.02em;white-space:nowrap}
+.count em{font-style:normal;color:var(--brass-dim)}
+.rail-btn{height:34px;padding:0 15px;background:linear-gradient(180deg,var(--panel-hi),var(--panel-2));border:1px solid var(--rail);
+  color:var(--ink);font-family:var(--sans);font-size:10px;letter-spacing:.11em;text-transform:uppercase;cursor:pointer;
+  transition:border-color var(--dur) var(--ease),background var(--dur) var(--ease),color var(--dur) var(--ease)}
+.rail-btn:hover{border-color:var(--brass-dim);color:var(--parchment)}
+.rail-btn:active{background:var(--wood-2)}
+.rail-btn.deliberate{color:var(--brass);border-color:var(--brass-dim)}
+.rail-btn.deliberate:hover{background:rgba(var(--accent-rgb),.14)}
+/* Theme/Rescan/Change-folder move as one unit when the rail wraps, instead
+   of leaving the last button orphaned alone on its own row. */
+.rail-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ══ THE STACKS ══ — flat, plain, no scene. The covers carry the color;
+   this is just the surface they sit on. */
+.stacks{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;
+  background:var(--wood)}
+.grid{position:relative;z-index:3;display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--card-min,178px),1fr));
+  column-gap:20px;row-gap:28px;padding:30px 34px 60px}
+
+/* one book cell */
+.book{position:relative;display:flex;flex-direction:column;align-items:center;padding-top:10px;
+  /* Skip layout+paint for cards outside the viewport — the single biggest scroll
+     win with 511 live cards. `auto` remembers each card's real size once seen.
+     content-visibility:auto implies paint containment even while rendering —
+     anything a child paints outside this box gets clipped. The hover lift
+     (.plate-wrap translateY(-6px)) moves the plate up by 6px, so this cell
+     needs at least that much headroom above the plate or the lift clips its
+     own top edge on hover. */
+  content-visibility:auto;contain-intrinsic-size:auto 330px}
+/* filtering/sorting hides cards with the `hidden` attribute; the display:flex
+   above would otherwise override the UA [hidden] rule and leak hidden books. */
+.book[hidden]{display:none}
+.book.hot{z-index:10}
+/* the plate: a clean recessed 3:4 board that mounts the (letterboxed) cover */
+.plate-wrap{position:relative;width:100%;transition:transform var(--dur) var(--ease)}
+.plate{position:relative;width:100%;aspect-ratio:3/4;
+  background:var(--plate-bg);
+  border:1px solid #000;
+  box-shadow:0 0 0 1px rgba(0,0,0,.6),0 20px 24px -18px rgba(0,0,0,.85);
+  display:grid;place-items:center;overflow:hidden;transition:box-shadow var(--dur) var(--ease),border-color var(--dur) var(--ease)}
+.plate img{max-width:100%;max-height:100%;display:block;position:relative;z-index:2;
+  box-shadow:0 0 0 1px rgba(0,0,0,.7),0 6px 16px -6px rgba(0,0,0,.8);
+  -webkit-user-drag:none}
+.cover-mount{position:relative;z-index:2;display:grid;place-items:center;max-width:100%;max-height:100%}
+
+/* gilt sheen following the cursor — a quiet highlight, not a flourish */
+.sheen{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;mix-blend-mode:screen;
+  background:radial-gradient(180px 180px at var(--mx,50%) var(--my,40%),rgba(var(--sheen-rgb),.4),rgba(var(--accent-rgb),.12) 38%,transparent 62%);
+  transition:opacity var(--dur) var(--ease)}
+
+/* placeholder / buckram binding */
+.fallback{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;padding:16px;text-align:center;background:var(--panel)}
+.fallback::before{content:"";position:absolute;inset:12px;border:1px solid rgba(var(--accent-rgb),.22)}
+.fallback .fb-title{font-family:var(--serif);font-size:clamp(15px,2.1vw,21px);line-height:1.16;color:var(--parchment);
+  letter-spacing:.02em;text-shadow:0 1px 0 rgba(0,0,0,.6);max-width:100%;overflow-wrap:anywhere}
+.fallback .fb-rule{width:34px;height:1px;background:var(--brass-dim)}
+.fallback .fb-mark{font-family:var(--sans);font-size:8.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--brass-dim)}
+/* loading shimmer only while a cover is pending */
+.fallback.pending::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(105deg,transparent 40%,rgba(var(--sheen-rgb),.10) 50%,transparent 60%);
+  background-size:220% 100%;animation:shimmer 1.9s var(--ease) infinite}
+@keyframes shimmer{0%{background-position:180% 0}100%{background-position:-80% 0}}
+
+/* favourite star — sits over the plate's top-right, stable while the book lifts */
+.fav-star{position:absolute;top:18px;right:8px;z-index:12;width:28px;height:28px;padding:0;
+  display:grid;place-items:center;background:transparent;border:0;cursor:pointer;
+  color:var(--ink-dim);filter:drop-shadow(0 1px 3px rgba(0,0,0,.85));
+  opacity:0;transform:scale(.82);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease),color var(--dur) var(--ease)}
+.fav-star svg{display:block}
+.book:hover .fav-star,.book:focus-within .fav-star{opacity:.9;transform:scale(1)}
+.fav-star:hover{color:var(--brass);opacity:1}
+.book.fav .fav-star{opacity:1;transform:scale(1);color:var(--brass)}
+
+/* a favourited book carries a faint keyline even at rest */
+.book.fav .plate{box-shadow:0 0 0 1px rgba(0,0,0,.6),0 0 0 2px var(--brass-deep) inset,0 20px 24px -18px rgba(0,0,0,.85)}
+
+/* the sort control is inert while Recent (recency-ordered) is showing */
+.seg.muted{opacity:.4;pointer-events:none}
+
+/* caption */
+.cap{width:100%;padding:11px 4px 0;text-align:center}
+.cap .t{font-family:var(--serif);font-size:14.5px;line-height:1.24;color:var(--ink);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  transition:color var(--dur) var(--ease);text-wrap:pretty}
+.cap .s{margin-top:4px;font-family:var(--mono);font-size:10.5px;font-variant-numeric:tabular-nums;
+  color:var(--ink-faint);letter-spacing:.02em;transition:color var(--dur) var(--ease)}
+/* tag chips shown under a tagged book — always reserves one row of height,
+   tagged or not, so footer heights stay even across a row of cards. */
+.card-tags{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:6px;min-height:17px}
+.ctag{font-family:var(--sans);font-size:9px;letter-spacing:.04em;color:var(--brass);
+  border:1px solid var(--brass-deep);background:rgba(var(--accent-rgb),.08);padding:1px 6px;max-width:100%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctag.more{color:var(--ink-dim);border-color:var(--rail);background:transparent}
+/* content-warning-style tags (nsfw, cw, ...) — fixed, theme-invariant amber
+   plus a glyph, like the file-type tags, so a safety signal never reads as
+   just another organizational tag and never relies on color alone. */
+.ctag.warn{color:#e0a53a;border-color:#8a5a12;background:rgba(224,165,58,.16)}
+.ctag.warn svg{margin-right:3px;vertical-align:-1px}
+/* nameplate rule that slides in under the plate on hover — transform, not
+   width, so the reveal never triggers layout */
+.cap .plate-rule{margin:8px auto 0;height:1px;width:64%;transform:scaleX(0);transform-origin:center;
+  background:linear-gradient(90deg,transparent,var(--brass-dim),transparent);
+  transition:transform var(--dur) var(--ease)}
+
+/* HOVER (the signature interaction) — transform/opacity only.
+   A flat lift, a border color shift, and a quiet sheen. */
+.book.hot .plate-wrap{transform:translateY(-6px);will-change:transform}
+.book.hot .plate{border-color:var(--brass-dim);
+  box-shadow:0 0 0 1px rgba(0,0,0,.6),0 32px 36px -20px rgba(0,0,0,.9),0 0 24px -8px rgba(var(--accent-rgb),.2)}
+.book.hot .sheen{opacity:1}
+.book.hot .cap .t{color:var(--parchment)}
+.book.hot .cap .s{color:var(--ink-dim)}
+.book.hot .cap .plate-rule{transform:scaleX(1)}
+
+@media (prefers-reduced-motion:reduce){
+  .plate-wrap{transition:transform .12s linear}
+  .lamp{display:none}
+  .fallback.pending::after{animation:none}
+}
+
+/* ══ EMPTY / CATALOGUING / ERROR ══ */
+.empty{position:absolute;inset:0;z-index:4;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;text-align:center;padding:40px;pointer-events:none}
+.empty.show{display:flex}
+.empty.show.err{pointer-events:auto}
+.empty svg{color:var(--brass-dim);opacity:.7}
+.empty .eh{font-family:var(--serif);font-size:26px;color:var(--parchment);letter-spacing:.02em}
+.empty .ep{font-family:var(--sans);font-size:13px;color:var(--ink-dim);max-width:380px;line-height:1.5}
+.empty .rail-btn{pointer-events:auto;margin-top:6px}
+.dots::after{content:"";animation:dots 1.4s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"·"}50%{content:"· ·"}75%{content:"· · ·"}}
+
+/* ══ THE LEDGER (modal) ══ */
+.scrim{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:44px;
+  background:rgba(10,7,4,.68);backdrop-filter:blur(4px) saturate(.7);animation:scrimIn .18s var(--ease)}
+@keyframes scrimIn{from{opacity:0}to{opacity:1}}
+.ledger{display:flex;flex-direction:column;width:min(860px,100%);max-height:100%;overflow:hidden;
+  background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--rail);
+  box-shadow:0 0 0 1px #000,0 40px 90px -30px #000,0 0 60px -20px rgba(var(--accent-rgb),.12);
+  animation:ledgerIn .2s var(--ease)}
+@keyframes ledgerIn{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:none}}
+.ledger-head{flex:none;display:flex;gap:20px;padding:22px 24px;border-bottom:1px solid var(--rail);
+  background:linear-gradient(180deg,var(--panel),transparent)}
+.ledger-thumb{flex:none;width:96px;height:128px;background:var(--plate-bg);border:1px solid #000;
+  display:grid;place-items:center;overflow:hidden;box-shadow:0 8px 18px -8px #000,0 0 0 1px rgba(var(--accent-rgb),.15)}
+.ledger-thumb img{max-width:100%;max-height:100%;box-shadow:0 0 0 1px #000}
+.ledger-thumb .mini{font-family:var(--serif);font-size:12px;color:var(--brass-dim);padding:8px;text-align:center;line-height:1.2}
+.ledger-thumb.zoomable{cursor:zoom-in}
+
+/* magnified cover preview shown on hovering the small ledger thumbnail */
+.thumb-zoom{position:fixed;z-index:150;pointer-events:none;background:var(--plate-bg);
+  border:1px solid var(--brass-dim);box-shadow:0 30px 70px -20px #000,0 0 0 1px #000;
+  padding:6px;animation:thumbZoomIn .12s var(--ease)}
+.thumb-zoom img{display:block;max-width:min(46vw,460px);max-height:75vh;object-fit:contain}
+@keyframes thumbZoomIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.ledger-info{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.ledger-title{font-family:var(--serif);font-size:28px;font-weight:600;color:var(--parchment);letter-spacing:.02em;line-height:1.1;text-wrap:pretty}
+.ledger-meta{margin-top:8px;font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--ink-dim);letter-spacing:.02em}
+
+/* metadata tags */
+.ledger-tags{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tagchip{display:inline-flex;align-items:center;border:1px solid var(--brass-dim);background:rgba(var(--accent-rgb),.10)}
+.tagchip-label{background:transparent;border:0;color:var(--brass);font-family:var(--sans);font-size:11px;
+  letter-spacing:.04em;padding:3px 4px 3px 9px;cursor:pointer}
+.tagchip-label:hover{color:var(--parchment)}
+.tagchip-x{background:transparent;border:0;border-left:1px solid var(--brass-deep);color:var(--ink-dim);
+  font-size:13px;line-height:1;padding:2px 7px 3px;cursor:pointer}
+.tagchip-x:hover{color:#e08a8a}
+.tagchip.warn{border-color:#8a5a12;background:rgba(224,165,58,.14)}
+.tagchip.warn .tagchip-label{color:#e0a53a}
+.tagchip.warn .tagchip-label svg{margin-right:4px;vertical-align:-1px}
+.tag-input{background:var(--field-bg);border:1px dashed var(--rail);color:var(--ink);font-family:var(--sans);font-size:11px;
+  padding:3px 9px;width:88px;outline:none}
+.tag-input:focus{border-color:var(--brass-dim);border-style:solid}
+.tag-input::placeholder{color:var(--ink-faint)}
+
+.ledger-acts{margin-top:16px;padding-top:16px;border-top:1px solid var(--rail);display:flex;flex-wrap:wrap;gap:8px}
+.ledger-acts .rail-btn.pri{color:var(--brass);border-color:var(--brass-dim)}
+/* Close is a dismissal, not a content action — it reads a step quieter than
+   Open/Favourite/Set cover so the row has real hierarchy, not five identical
+   buttons plus one accent. */
+.ledger-acts .rail-btn.ghost{margin-left:auto;background:transparent;border-color:transparent;color:var(--ink-dim)}
+.ledger-acts .rail-btn.ghost:hover{border-color:var(--rail);color:var(--ink);background:transparent}
+.ledger-body{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;padding:10px 8px 14px}
+
+/* tree */
+.node{display:flex;align-items:center;gap:10px;height:30px;padding:0 12px;position:relative;cursor:default;
+  border-bottom:1px solid transparent}
+.node .nm{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:var(--ink)}
+.node .sz{flex:none;font-family:var(--mono);font-size:11px;font-variant-numeric:tabular-nums;color:var(--ink-faint);letter-spacing:.02em}
+.node.dir-row{cursor:pointer}
+.node.dir-row .nm{font-family:var(--serif);font-size:14.5px;color:var(--parchment)}
+.node.file-row{cursor:pointer}
+.node.file-row:hover{background:rgba(var(--accent-rgb),.06)}
+.node.file-row:hover .nm{color:var(--parchment)}
+.node.dir-row:hover{background:rgba(var(--accent-rgb),.10)}
+.node .chev{flex:none;width:10px;display:inline-flex;align-items:center;justify-content:center;color:var(--brass-dim);transition:transform var(--dur) var(--ease)}
+.node.open .chev{transform:rotate(90deg)}
+.kids{position:relative;margin-left:22px;border-left:1px solid var(--rail)}
+/* file-type tags are semantic (like syntax highlighting) and stay fixed across themes */
+.tag{flex:none;width:38px;text-align:center;padding:2px 0;font-family:var(--sans);font-size:8.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;border:1px solid;line-height:1.3}
+.tag.pdf{color:#d98a8a;border-color:#5a2020;background:rgba(107,32,32,.28)}
+.tag.image{color:#a8c07a;border-color:#3f4a24;background:rgba(95,107,58,.22)}
+.tag.text{color:#e4d9bf;border-color:#4a4132;background:rgba(120,108,80,.16)}
+.tag.dir{color:var(--brass);border-color:var(--brass-dim);background:rgba(var(--accent-rgb),.12)}
+.tag.doc,.tag.audio,.tag.video,.tag.archive,.tag.other{color:#b9a98d;border-color:var(--rail);background:rgba(90,76,60,.2)}
+.ledger-note{padding:14px 16px;font-family:var(--sans);font-size:12px;color:var(--ink-dim);text-align:center;font-style:italic}
+
+/* ══ CONTEXT MENU ══ */
+.menu{position:fixed;z-index:200;min-width:196px;padding:5px;background:linear-gradient(180deg,var(--wood-3),var(--wood-2));
+  border:1px solid var(--brass-dim);box-shadow:0 20px 40px -14px #000,0 0 0 1px #000;animation:menuIn .12s var(--ease)}
+@keyframes menuIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.menu button{display:block;width:100%;text-align:left;padding:8px 12px;background:transparent;border:0;
+  font-family:var(--sans);font-size:12.5px;color:var(--ink);cursor:pointer;letter-spacing:.01em}
+.menu button:hover{background:linear-gradient(90deg,rgba(var(--accent-rgb),.16),transparent);color:var(--parchment)}
+.menu hr{border:0;border-top:1px solid var(--rail);margin:5px 2px}
+
+/* ══ TAG FILTER DROPDOWN ══ */
+.tagfilter{min-width:236px;max-width:268px;padding:0}
+.tagfilter .tf-head{padding:9px 12px 7px;font-family:var(--sans);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-dim);border-bottom:1px solid var(--rail)}
+.tagfilter .tf-list{max-height:340px;overflow-y:auto;padding:4px 0}
+.tagfilter .tf-row{display:flex;align-items:center;gap:9px;padding:6px 12px;cursor:pointer}
+.tagfilter .tf-row:hover{background:rgba(var(--accent-rgb),.10)}
+.tagfilter .tf-row input{accent-color:var(--brass);width:14px;height:14px;cursor:pointer;flex:none}
+.tagfilter .tf-name{flex:1 1 auto;font-size:12.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tagfilter .tf-count{flex:none;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint)}
+.tf-row.warn .tf-name{color:#e0a53a}
+.tf-row.warn .tf-name svg{margin-right:5px;vertical-align:-1px}
+.tagfilter .tf-reset{display:block;width:100%;text-align:center;padding:9px;background:transparent;border:0;
+  border-top:1px solid var(--rail);color:var(--brass);font-family:var(--sans);font-size:11.5px;cursor:pointer}
+.tagfilter .tf-reset:hover{background:rgba(var(--accent-rgb),.12)}
+.tagfilter .tf-empty{padding:16px;font-size:12px;color:var(--ink-dim);text-align:center;line-height:1.5}
+
+/* ══ THEME SWITCHER DROPDOWN ══ */
+.themepanel{min-width:266px;max-width:300px;padding:0}
+.themepanel .tf-head{padding:9px 12px 7px;font-family:var(--sans);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-dim);border-bottom:1px solid var(--rail)}
+.theme-row{display:flex;align-items:center;gap:11px;padding:9px 12px;cursor:pointer;width:100%;
+  background:transparent;border:0;text-align:left}
+.theme-row:hover{background:rgba(var(--accent-rgb),.10)}
+.theme-row.on{background:rgba(var(--accent-rgb),.14)}
+.theme-swatch{flex:none;width:30px;height:30px;border:1px solid rgba(0,0,0,.5);position:relative;overflow:hidden;
+  box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.theme-swatch::after{content:"";position:absolute;right:0;bottom:0;width:60%;height:60%;
+  background:var(--sw-accent);clip-path:polygon(100% 0,100% 100%,0 100%)}
+.theme-row-text{flex:1 1 auto;min-width:0}
+.theme-row-name{font-family:var(--serif);font-size:13.5px;color:var(--ink);line-height:1.2}
+.theme-row.on .theme-row-name{color:var(--parchment)}
+.theme-row-desc{margin-top:2px;font-family:var(--sans);font-size:10px;color:var(--ink-faint);line-height:1.3}
+.theme-row-check{flex:none;width:16px;text-align:center;color:var(--brass);font-size:13px;opacity:0}
+.theme-row.on .theme-row-check{opacity:1}
+
+/* ══ IN-APP PAGE PROMPT (window.prompt is unsupported in Electron) ══ */
+.askbox{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;
+  background:rgba(10,7,4,.55);backdrop-filter:blur(3px);animation:scrimIn .16s var(--ease)}
+.askbox-panel{width:min(320px,90vw);background:linear-gradient(180deg,var(--panel),var(--panel-2));
+  border:1px solid var(--brass-dim);box-shadow:0 30px 70px -24px #000;padding:20px}
+.askbox-title{font-family:var(--serif);font-size:17px;color:var(--parchment);margin-bottom:12px}
+.askbox-input{width:100%;background:var(--field-bg);border:1px solid var(--rail);color:var(--ink);
+  font-family:var(--mono);font-size:15px;padding:8px 10px;outline:none}
+.askbox-input:focus{border-color:var(--brass-dim)}
+.askbox-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.askbox-acts .rail-btn.pri{color:var(--brass);border-color:var(--brass-dim)}
+
+/* ══ TOAST ══ */
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:300;padding:11px 20px;
+  background:linear-gradient(180deg,var(--panel),var(--wood-2));border:1px solid var(--brass-dim);color:var(--ink);
+  font-size:12.5px;letter-spacing:.02em;box-shadow:0 16px 40px -16px #000;animation:toastIn .2s var(--ease)}
+.toast b{color:var(--brass);font-weight:600}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
