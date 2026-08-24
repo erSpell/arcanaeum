@@ -11,6 +11,7 @@ const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
+const { spawn } = require('child_process');
 const { Readable } = require('stream');
 
 const DEFAULT_ROOT = path.join(app.getPath('documents'), 'RPGs', 'RPG Folder');
@@ -71,8 +72,85 @@ const DEFAULT_CONFIG = {
 };
 
 const RECENT_LIMIT = 60;
+const COVER_SOURCE_EXTS = new Set([...IMAGE_EXTS, '.pdf']);
 
 let config = { ...DEFAULT_CONFIG };
+const approvedRoots = new Set();
+const approvedCoverFiles = new Set();
+
+function canonicalPath(input) {
+  if (typeof input !== 'string' || !input || input.includes('\0')) return null;
+  const normal = path.normalize(input);
+  if (!path.isAbsolute(normal)) return null;
+  return path.resolve(normal);
+}
+
+function samePath(a, b) {
+  return process.platform === 'win32'
+    ? a.toLowerCase() === b.toLowerCase()
+    : a === b;
+}
+
+function isPathInside(candidate, root) {
+  const child = canonicalPath(candidate);
+  const parent = canonicalPath(root);
+  if (!child || !parent) return false;
+  if (samePath(child, parent)) return true;
+  const rel = path.relative(parent, child);
+  return !!rel && !rel.startsWith('..') && !path.isAbsolute(rel);
+}
+
+function approveRoot(root) {
+  const safe = canonicalPath(root);
+  if (safe) approvedRoots.add(safe);
+  return safe;
+}
+
+function approveCoverFile(absPath) {
+  const safe = canonicalPath(absPath);
+  if (safe && COVER_SOURCE_EXTS.has(path.extname(safe).toLowerCase())) {
+    approvedCoverFiles.add(safe);
+    return safe;
+  }
+  return null;
+}
+
+function coverOverridePaths() {
+  return Object.values(config.coverOverrides || {})
+    .map(canonicalPath)
+    .filter(Boolean);
+}
+
+function isAllowedRoot(root) {
+  const safe = canonicalPath(root);
+  if (!safe) return false;
+  return [config.root, DEFAULT_ROOT, ...approvedRoots]
+    .map(canonicalPath)
+    .filter(Boolean)
+    .some((allowed) => samePath(safe, allowed));
+}
+
+function isAllowedLocalPath(absPath) {
+  const safe = canonicalPath(absPath);
+  if (!safe) return false;
+  if (isPathInside(safe, config.root) || isPathInside(safe, coverDir())) return true;
+  return coverOverridePaths().some((override) => samePath(safe, override));
+}
+
+function sanitizeConfigPatch(partial) {
+  if (!partial || typeof partial !== 'object' || Array.isArray(partial)) return {};
+  const next = {};
+  if (typeof partial.sort === 'string') next.sort = partial.sort;
+  if (typeof partial.layout === 'string') next.layout = partial.layout;
+  if (typeof partial.filter === 'string') next.filter = partial.filter;
+  if (Number.isFinite(partial.cardSize)) next.cardSize = partial.cardSize;
+  if (typeof partial.theme === 'string') next.theme = partial.theme;
+  return next;
+}
+
+function isGameId(id) {
+  return typeof id === 'string' && /^[a-f0-9]{16}$/i.test(id);
+}
 
 function loadConfig() {
   try {
@@ -89,6 +167,7 @@ function loadConfig() {
       config = { ...DEFAULT_CONFIG };
     }
   }
+  approveRoot(config.root);
   return config;
 }
 
@@ -384,6 +463,7 @@ async function scanLibrary(win, root, force) {
 const coverFile = (id) => path.join(coverDir(), `${id}.png`);
 
 function cachedCoverUrl(id) {
+  if (!isGameId(id)) return null;
   const f = coverFile(id);
   try {
     const st = fs.statSync(f);
@@ -395,7 +475,9 @@ function cachedCoverUrl(id) {
 }
 
 function imgUrl(absPath) {
-  let p = absPath.replace(/\\/g, '/');
+  const safe = canonicalPath(absPath);
+  if (!safe) return null;
+  let p = safe.replace(/\\/g, '/');
   if (!p.startsWith('/')) p = '/' + p;
   return 'biblio-img://local' + encodeURI(p).replace(/#/g, '%23').replace(/\?/g, '%3F');
 }
@@ -415,9 +497,13 @@ async function serveLocalFile(request) {
     const u = new URL(request.url);
     let p = decodeURIComponent(u.pathname);
     if (p.startsWith('/')) p = p.slice(1);
-    abs = path.normalize(p);
+    abs = canonicalPath(p);
   } catch {
     return new Response('bad url', { status: 400 });
+  }
+
+  if (!abs || !isAllowedLocalPath(abs)) {
+    return new Response('forbidden', { status: 403 });
   }
 
   let st;
@@ -522,7 +608,7 @@ app.on('window-all-closed', () => {
 
 ipcMain.handle('get-config', () => config);
 
-ipcMain.handle('save-config', (_e, partial) => saveConfig(partial));
+ipcMain.handle('save-config', (_e, partial) => saveConfig(sanitizeConfigPatch(partial)));
 
 // Toggle a game's favorite state; returns the new state.
 ipcMain.handle('toggle-favorite', (_e, id) => {
@@ -561,7 +647,9 @@ ipcMain.handle('set-tags', (_e, id, tags) => {
 
 ipcMain.handle('scan-library', async (e, root, force) => {
   const win = BrowserWindow.fromWebContents(e.sender);
-  const target = root || config.root || DEFAULT_ROOT;
+  const target = canonicalPath(root || config.root || DEFAULT_ROOT);
+  if (!target || !isAllowedRoot(target)) return { ok: false, error: 'Folder was not selected in Arcanaeum', games: [] };
+  approveRoot(target);
   if (target !== config.root) saveConfig({ root: target });
   return scanLibrary(win, target, !!force);
 });
@@ -574,13 +662,15 @@ ipcMain.handle('choose-root', async (e) => {
     defaultPath: config.root || DEFAULT_ROOT,
   });
   if (res.canceled || !res.filePaths.length) return null;
-  saveConfig({ root: res.filePaths[0] });
-  return res.filePaths[0];
+  const root = approveRoot(res.filePaths[0]);
+  if (!root) return null;
+  saveConfig({ root });
+  return root;
 });
 
 // The renderer rasterises page 1 with pdf.js and hands back a PNG data URL.
 ipcMain.handle('save-cover', async (_e, id, dataUrl) => {
-  if (!id || typeof dataUrl !== 'string') return null;
+  if (!isGameId(id) || typeof dataUrl !== 'string') return null;
   const m = /^data:image\/png;base64,(.+)$/.exec(dataUrl);
   if (!m) return null;
   try {
@@ -596,6 +686,7 @@ ipcMain.handle('save-cover', async (_e, id, dataUrl) => {
 });
 
 ipcMain.handle('clear-cover', async (_e, id) => {
+  if (!isGameId(id)) return false;
   try { await fsp.unlink(coverFile(id)); } catch { /* already gone */ }
   patchIndexGame(id, { cachedCover: null });
   return true;
@@ -603,13 +694,20 @@ ipcMain.handle('clear-cover', async (_e, id) => {
 
 // Give the renderer a readable URL for a source file (used for image covers
 // and for the pdf bytes pdf.js loads).
-ipcMain.handle('file-url', (_e, absPath) => imgUrl(absPath));
+ipcMain.handle('file-url', (_e, absPath) => isAllowedLocalPath(absPath) ? imgUrl(absPath) : null);
 
 ipcMain.handle('set-cover-override', async (e, id, absPath, page) => {
+  if (!isGameId(id)) return { override: null, page: 1, error: 'bad game id' };
   const overrides = { ...config.coverOverrides };
   const pages = { ...config.coverPages };
   if (absPath) {
-    overrides[id] = absPath;
+    const safePath = canonicalPath(absPath);
+    const allowedPicked = safePath && [...approvedCoverFiles].some((p) => samePath(p, safePath));
+    const allowedInLibrary = safePath && isPathInside(safePath, config.root);
+    if (!safePath || !COVER_SOURCE_EXTS.has(path.extname(safePath).toLowerCase()) || (!allowedPicked && !allowedInLibrary)) {
+      return { override: null, page: 1, error: 'cover source was not selected in Arcanaeum' };
+    }
+    overrides[id] = safePath;
     pages[id] = Math.max(1, page || 1);
   } else {
     delete overrides[id];
@@ -624,7 +722,7 @@ ipcMain.handle('set-cover-override', async (e, id, absPath, page) => {
     ? {
         cachedCover: null,
         coverPage: pages[id] || 1,
-        cover: { kind: IMAGE_EXTS.has(path.extname(absPath).toLowerCase()) ? 'image' : 'pdf', path: absPath },
+        cover: { kind: IMAGE_EXTS.has(path.extname(overrides[id]).toLowerCase()) ? 'image' : 'pdf', path: overrides[id] },
       }
     // Override cleared — an empty signature forces the next scan to re-derive
     // this game's cover from the heuristic.
@@ -645,15 +743,17 @@ ipcMain.handle('pick-cover-file', async (e, defaultPath) => {
     defaultPath: defaultPath || config.root || DEFAULT_ROOT,
   });
   if (res.canceled || !res.filePaths.length) return null;
-  return res.filePaths[0];
+  return approveCoverFile(res.filePaths[0]);
 });
 
 // Hand a file to whatever program the OS has registered for it.
 ipcMain.handle('open-path', async (_e, absPath) => {
   if (!absPath) return 'no path';
-  const err = await shell.openPath(absPath);
+  const safePath = canonicalPath(absPath);
+  if (!safePath || !isAllowedLocalPath(safePath)) return 'path is outside the selected library';
+  const err = await shell.openPath(safePath);
   if (!err) {
-    const recents = [absPath, ...config.recents.filter((r) => r !== absPath)].slice(0, 24);
+    const recents = [safePath, ...config.recents.filter((r) => r !== safePath)].slice(0, 24);
     saveConfig({ recents });
   }
   return err; // '' on success
@@ -661,16 +761,19 @@ ipcMain.handle('open-path', async (_e, absPath) => {
 
 ipcMain.handle('show-in-folder', async (_e, absPath) => {
   if (!absPath) return 'no path';
+  const safePath = canonicalPath(absPath);
+  if (!safePath || !isAllowedLocalPath(safePath)) return 'path is outside the selected library';
   // shell.showItemInFolder is unreliable for *directories* on Windows (it is
   // built to reveal files), and a game's path is a folder. Reveal it with
   // Explorer's own /select verb, which selects the item in its parent and
   // brings the window to the foreground.
   if (process.platform === 'win32') {
-    // Windows paths can't contain '"', so quoting is injection-safe. explorer.exe
-    // returns exit code 1 even on success, so the error is ignored.
-    require('child_process').exec(`explorer.exe /select,"${path.normalize(absPath)}"`);
+    // Avoid shell interpolation: Explorer receives the selected path as a raw
+    // argv value, so renderer-provided paths cannot inject shell metacharacters.
+    const child = spawn('explorer.exe', [`/select,${safePath}`], { detached: true, stdio: 'ignore' });
+    child.unref();
     return '';
   }
-  shell.showItemInFolder(absPath);
+  shell.showItemInFolder(safePath);
   return '';
 });

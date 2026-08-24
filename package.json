@@ -11,31 +11,9 @@
     "pack": "electron-packager . --platform=win32 --arch=x64 --out=out --overwrite --ignore=node_modules/.cache --ignore=dist --ignore=out --ignore=local_notes",
     "dist": "npm run pack"
   },
-  "build": {
-    "appId": "app.arcanaeum.library",
-    "productName": "Arcanaeum",
-    "files": [
-      "main.js",
-      "preload.js",
-      "src/**/*",
-      "!src/**/*.bak"
-    ],
-    "asarUnpack": [
-      "src/vendor/**"
-    ],
-    "win": {
-      "target": [
-        "portable"
-      ]
-    },
-    "portable": {
-      "artifactName": "Arcanaeum.${ext}"
-    }
-  },
   "devDependencies": {
     "@electron/packager": "^20.0.4",
     "electron": "^31.3.1",
-    "electron-builder": "^24.13.3",
     "pdfjs-dist": "^4.6.82"
   }
 }
