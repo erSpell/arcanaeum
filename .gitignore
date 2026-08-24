@@ -24,6 +24,8 @@ Thumbs.db
 
 # Private working notes
 local_notes/
+local_notes.md
+localnotes.md
 
 # Environment/secrets
 .env
