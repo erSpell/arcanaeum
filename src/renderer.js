@@ -248,7 +248,7 @@ const cards=new Map();
 function mountChrome(){
   root.innerHTML=`
     <div class="rail">
-      <div class="brand"><b>Arcanaeum</b><small>of Other Worlds</small></div>
+      <div class="brand"><b>Arcanaeum</b></div>
       <div class="seg" id="view">
         <button data-view="all">All</button>
         <button data-view="favorites">Favourites</button>
