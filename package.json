@@ -15,5 +15,8 @@
     "@electron/packager": "^20.0.4",
     "electron": "^43.4.1",
     "pdfjs-dist": "^4.6.82"
+  },
+  "overrides": {
+    "@xmldom/xmldom": "^0.9.12"
   }
 }
