@@ -8,6 +8,8 @@
   "scripts": {
     "start": "electron .",
     "postinstall": "node scripts/vendor-pdfjs.js",
+    "verify": "node --check main.js && node --check preload.js && node --check scripts/vendor-pdfjs.js && node --check src/renderer.js && npm audit",
+    "verify:pack": "npm run verify && npm run pack",
     "pack": "electron-packager . --platform=win32 --arch=x64 --out=out --overwrite --ignore=node_modules/.cache --ignore=dist --ignore=out --ignore=local_notes",
     "dist": "npm run pack"
   },
